@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	. "github.com/eastside-eng/redis-proxy/internal/log"
 )
 
 type Cache interface {
@@ -84,7 +86,7 @@ func (cache *DecayingLRUCache) Add(key string, val interface{}) {
 	defer cache.lock.Unlock()
 
 	element := &cacheElement{key, val, time.Now()}
-
+	Logger.Infow("Adding key.", "key", key)
 	// Append to our time-ordered log
 	cache.log.PushBack(element)
 
@@ -103,6 +105,9 @@ func (cache *DecayingLRUCache) Add(key string, val interface{}) {
 		lru := cache.elements.Back()
 		if lru != nil {
 			lruKey := lru.Value.(*cacheElement).Key
+			Logger.Infow("Evicting key due to capacity.",
+				"key", lruKey,
+				"size", cache.elements.Len())
 			cache.elements.Remove(lru)
 			delete(cache.hashmap, lruKey)
 		}
@@ -116,14 +121,15 @@ func (cache *DecayingLRUCache) Remove(key string) {
 
 	ref, exists := cache.hashmap[key]
 	if exists {
+		Logger.Infow("Removing key.", "key", key)
 		cache.elements.Remove(ref)
 		delete(cache.hashmap, key)
 	}
 }
 
-// RemoveIfExpired will atomicly remove the given key from the cache, iff the most recent
-// timestamp is after the given time.
-func (cache *DecayingLRUCache) RemoveIfExpired(key string, after time.Time) {
+// RemoveIfAfter will atomicly remove the given key from the cache, iff the most recent
+// timestamp + TTL is after the given time.
+func (cache *DecayingLRUCache) RemoveIfAfter(key string, after time.Time) {
 	cache.lock.Lock()
 	defer cache.lock.Unlock()
 
@@ -131,8 +137,11 @@ func (cache *DecayingLRUCache) RemoveIfExpired(key string, after time.Time) {
 	if exists {
 		element := ref.Value.(*cacheElement)
 		expiry := element.Timestamp.Add(cache.ttl)
-		expired := expiry.After(after)
+		expired := after.After(expiry)
 		if expired {
+			Logger.Infow("Evicting key due to expiry.",
+				"key", key,
+				"expiry", expiry)
 			cache.elements.Remove(ref)
 			delete(cache.hashmap, key)
 		}
@@ -145,34 +154,24 @@ func (cache *DecayingLRUCache) redeemer() {
 		case <-cache.ticker.C:
 			cursor := cache.log.Front()
 			now := time.Now()
+			// Logger.Infow("Redeemer routine running.", "now", now)
 			for cursor != nil {
 				element := cursor.Value.(*cacheElement)
 				expiry := element.Timestamp.Add(cache.ttl)
-				expired := expiry.After(now)
+				expired := now.After(expiry)
 
 				// Because the log is ordered by time, we can bail out once we hit a
 				// non-expired entry.
 				if !expired {
 					break
 				}
-
 				// Because the TS is set on creation and not mutable, we don't need to
 				// lock when reading TS above and can simply lock when removing from
 				// the underly data structures.
 
 				// One issue is that the log will contain multiple entries for a key,
 				// we need to lock and check the map for the _real_ TS.
-
-				// This is a bit of an optimization, we can check if
-				// element.TS == hash[element.key].TS in constant time to determine
-				// if we need to invoke remove.
-				mapElement, exists := cache.hashmap[element.Key]
-				if exists {
-					mapElement := mapElement.Value.(*cacheElement)
-					if mapElement.Timestamp == element.Timestamp {
-						cache.RemoveIfExpired(element.Key, now)
-					}
-				}
+				cache.RemoveIfAfter(element.Key, now)
 
 				// Move cursor and remove last element.
 				prev := cursor
@@ -189,6 +188,7 @@ func (cache *DecayingLRUCache) redeemer() {
 // Start will start the Redeemer coroutine. The callee must call #Stop() to
 // allow GC to clean up the cache.
 func (cache *DecayingLRUCache) Start() {
+	Logger.Infow("Redeemer routine started.")
 	go cache.redeemer()
 }
 
