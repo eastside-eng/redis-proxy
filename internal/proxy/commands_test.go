@@ -10,7 +10,7 @@ func TestParser(t *testing.T) {
 	raw := []byte("*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n")
 	out, err := parseCommand(raw)
 	assert.Nil(t, err)
-	assert.Equal(t, "foo", out.Name)
+	assert.Equal(t, "FOO", out.Name)
 	assert.Equal(t, "bar", out.Args[0])
 }
 

@@ -3,6 +3,7 @@ package proxy
 import (
 	"errors"
 	"strconv"
+	"strings"
 )
 
 // Command is a parsed version of the Redis RESP protocol. Each Command
@@ -62,8 +63,8 @@ func parseCommand(raw []byte) (*Command, error) {
 	}
 
 	if cnt == 1 {
-		return &Command{Name: res[0], Args: make([]string, 0)}, nil
+		return &Command{Name: strings.ToUpper(res[0]), Args: make([]string, 0)}, nil
 	}
 
-	return &Command{Name: res[0], Args: res[1:]}, nil
+	return &Command{Name: strings.ToUpper(res[0]), Args: res[1:]}, nil
 }
