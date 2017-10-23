@@ -1,0 +1,10 @@
+version: '2'
+services:
+  redis-proxy:
+    build:
+      context: .
+    image: redis-proxy
+    ports:
+      - "8001:8001"
+  redis:
+    image: redis:latest

@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/eastside-eng/redis-proxy/internal/cache"
-	"github.com/eastside-eng/redis-proxy/internal/proxy"
+	"github.com/eastside-eng/redis-proxy/cache"
+	"github.com/eastside-eng/redis-proxy/proxy"
 	"github.com/go-redis/redis"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

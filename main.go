@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/eastside-eng/redis-proxy/cmd"
-	log "github.com/eastside-eng/redis-proxy/internal/log"
+	log "github.com/eastside-eng/redis-proxy/log"
 )
 
 func main() {
