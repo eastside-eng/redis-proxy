@@ -30,7 +30,7 @@ var cfgFile string
 var RootCmd = &cobra.Command{
 	Use:   "redis-proxy",
 	Short: "A simple in-memory Redis proxy that supports the RESP protocol.",
-	Long:  `Redis-proxy is a flexible server for `,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		redisAddr = viper.GetString("redis_hostname")
 		redisPassword = viper.GetString("redis_password")
@@ -51,7 +51,7 @@ var RootCmd = &cobra.Command{
 			Password: redisPassword,
 			DB:       redisDb,
 		})
-		Logger.Infow("Pinging backing redis", "responnse", client.Ping())
+		Logger.Infow("Pinging backing redis", "response", client.Ping())
 
 		cache, err := cache.NewDecayingLRUCache(cacheCapacity,
 			time.Duration(cachePeriodMs)*time.Millisecond,
@@ -83,8 +83,8 @@ func init() {
 	RootCmd.Flags().Int("redis_database", 0, "The redis database to use. See https://redis.io/commands/select.")
 
 	RootCmd.Flags().Int("capacity", 1024, "The maximum number of entries to cache.")
-	RootCmd.Flags().Int("cache-period", 100, "The periodicity of the cache eviction thread, in milliseconds.")
-	RootCmd.Flags().Int("cache-ttl", 5*60*1000, "A global TTL for cache entries, in milliseconds.")
+	RootCmd.Flags().Int("cache_period", 100, "The periodicity of the cache eviction thread, in milliseconds.")
+	RootCmd.Flags().Int("cache_ttl", 5*60*1000, "A global TTL for cache entries, in milliseconds.")
 
 	RootCmd.Flags().Int("port", 8001, "A open port used for listening.")
 

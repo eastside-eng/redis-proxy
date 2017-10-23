@@ -1,7 +1,29 @@
 # redis-proxy
-A simple in-memory LRU cache that implements the Redis GET protocol.
+
+A simple in-memory LRU cache that implements the Redis RESP protocol.
 
 ## Usage
+
+```
+A simple in-memory Redis proxy that supports the RESP protocol.
+
+Usage:
+  redis-proxy [flags]
+
+Flags:
+      --cache_period int        The periodicity of the cache eviction thread, in milliseconds. (default 100)
+      --cache_ttl int           A global TTL for cache entries, in milliseconds. (default 300000)
+      --capacity int            The maximum number of entries to cache. (default 1024)
+      --config string           config file
+  -h, --help                    help for redis-proxy
+      --port int                A open port used for listening. (default 8001)
+      --redis_database int      The redis database to use. See https://redis.io/commands/select.
+      --redis_hostname string   The hostname for the backing redis cache. (default "localhost:6379")
+      --redis_password string   The password for the backing redis cache.
+```
+
+redis-proxy uses the Viper and Cobra libraries to provide configuration and CLI support. Environment variables and config files are supported,
+see the Cobra documentation.
 
 ### Docker
 
