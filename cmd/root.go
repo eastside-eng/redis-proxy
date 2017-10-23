@@ -41,6 +41,8 @@ var RootCmd = &cobra.Command{
 			DB:       redisDb,
 		})
 
+		fmt.Println("Pinging backing redis", client.Ping())
+
 		cache, err := cache.NewDecayingLRUCache(cacheCapacity,
 			time.Duration(cachePeriodMs)*time.Millisecond,
 			time.Duration(cacheTTLMs)*time.Millisecond)

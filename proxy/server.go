@@ -101,11 +101,11 @@ type handler func(cache *cache.DecayingLRUCache, redisClient *redis.Client, comm
 var getHandler handler = func(cache *cache.DecayingLRUCache, redisClient *redis.Client, command *Command) ([]byte, error) {
 	key := command.Args[0]
 	resp, exists := cache.Get(key)
-	Logger.Infow("Invoking GET on cache", "cache-entry", resp)
+	Logger.Infow("Invoking GET on cache", "key", key, "cache-entry", resp)
 	if !exists {
 		resp := redisClient.Get(key)
 		val, err := resp.Result()
-		Logger.Infow("Invoking GET on backing Redis", "redis-entry", val)
+		Logger.Infow("Invoking GET on backing Redis", "key", key, "redis-entry", val)
 		if err != nil {
 			return RespNIL, nil
 		}
