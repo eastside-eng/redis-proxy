@@ -29,24 +29,24 @@ var RootCmd = &cobra.Command{
 	Use:   "redis-proxy",
 	Short: "A simple in-memory Redis proxy. Supports RESP.",
 	Long:  ``,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		redisAddr = viper.GetString("redis_hostname")
+		redisPassword = viper.GetString("redis_password")
+		redisDb = viper.GetInt("redis_database")
+
+		fmt.Println("Starting redis-proxy with " + redisAddr)
 		client := redis.NewClient(&redis.Options{
 			Addr:     redisAddr,
 			Password: redisPassword,
 			DB:       redisDb,
 		})
 
-		pong, err := client.Ping().Result()
-		fmt.Println(pong, err)
-
 		cache, err := cache.NewDecayingLRUCache(cacheCapacity,
 			time.Duration(cachePeriodMs)*time.Millisecond,
 			time.Duration(cacheTTLMs)*time.Millisecond)
 
 		if err != nil {
-			panic("Error creating LRU!")
+			panic("Error creating cache")
 		}
 
 		server := proxy.NewServer(cache, client)
@@ -54,8 +54,6 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -68,15 +66,19 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
 
-	RootCmd.Flags().StringVar(&redisAddr, "redis-hostname", "localhost:6379", "The hostname for the backing redis cache.")
-	RootCmd.Flags().StringVar(&redisPassword, "redis-password", "", "The password for the backing redis cache.")
-	RootCmd.Flags().IntVar(&redisDb, "redis-database", 0, "The redis database to use. See https://redis.io/commands/select.")
+	RootCmd.Flags().String("redis_hostname", "localhost:6379", "The hostname for the backing redis cache.")
+	RootCmd.Flags().String("redis_password", "", "The password for the backing redis cache.")
+	RootCmd.Flags().Int("redis_database", 0, "The redis database to use. See https://redis.io/commands/select.")
 
 	RootCmd.Flags().IntVar(&cacheCapacity, "capacity", 1024, "The maximum number of entries to cache.")
 	RootCmd.Flags().IntVar(&cachePeriodMs, "cache-period", 100, "The periodicity of the cache eviction thread, in milliseconds.")
 	RootCmd.Flags().IntVar(&cacheTTLMs, "cache-ttl", 5*60*1000, "A global TTL for cache entries, in milliseconds.")
 
 	RootCmd.Flags().IntVarP(&port, "port", "p", 8001, "A open port used for listening.")
+
+	viper.BindPFlag("redis_hostname", RootCmd.Flags().Lookup("redis_hostname"))
+	viper.BindPFlag("redis_password", RootCmd.Flags().Lookup("redis_password"))
+	viper.BindPFlag("redis_database", RootCmd.Flags().Lookup("redis_database"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -88,6 +90,7 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 
+	fmt.Println("Loaded from Env", viper.AllKeys())
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())

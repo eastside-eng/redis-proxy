@@ -4,6 +4,7 @@ ADD . /app/
 WORKDIR /app
 
 RUN go-wrapper download
-RUN go-wrapper install
+
+RUN go build -o redis-proxy .
 
 CMD ["/app/redis-proxy"]
