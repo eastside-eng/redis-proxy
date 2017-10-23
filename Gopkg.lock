@@ -2,10 +2,22 @@
 
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "629574ca2a5df945712d3079857300b5e4da0236"
   version = "v1.4.2"
+
+[[projects]]
+  name = "github.com/go-redis/redis"
+  packages = [".","internal","internal/consistenthash","internal/hashtag","internal/pool","internal/proto"]
+  revision = "35248155a505a84811be81a2aab1c423317447be"
+  version = "v6.7.2"
 
 [[projects]]
   branch = "master"
@@ -27,12 +39,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
-
-[[projects]]
-  branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   revision = "06020f85339e21b2478f756a78e295255ffa4d6a"
@@ -42,6 +48,12 @@
   packages = ["."]
   revision = "16398bac157da96aa88f98a2df640c7f32af1da2"
   version = "v1.0.1"
+
+[[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -80,6 +92,30 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
+  version = "v1.1.4"
+
+[[projects]]
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  revision = "4e336646b2ef9fc6e47be8e21594178f98e5ebcf"
+  version = "v1.2.0"
+
+[[projects]]
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "go.uber.org/zap"
+  packages = [".","buffer","internal/bufferpool","internal/color","internal/exit","zapcore"]
+  revision = "35aad584952c3e7020db7b839f6b102de6271f89"
+  version = "v1.7.1"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
@@ -100,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "530f154a357648fad5fd87d5bab9cfef1d59b25a717e2ed06e40324c2f6bf77b"
+  inputs-digest = "bf7398fd6385cd46875567080a6f99675c160924db1cb467062b69f75b1744e6"
   solver-name = "gps-cdcl"
   solver-version = 1
