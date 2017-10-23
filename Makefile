@@ -8,7 +8,11 @@ build:
 test:
 	go test github.com/eastside-eng/redis-proxy/cache
 	go test github.com/eastside-eng/redis-proxy/proxy
-	docker-compose up
+	docker-compose up -d
+	# Sleep 15 seconds to let the servers come up...
+	sleep 15
+	# End to end tests are in the main package
+	go test github.com/eastside-eng/redis-proxy
 
 .PHONY: run-dev
 run-dev:

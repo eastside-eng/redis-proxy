@@ -28,7 +28,7 @@ func nextString(raw []byte, start int) (string, int, error) {
 }
 
 // ParseCommand takes a byte array and parses it into a Command instance.
-// e.g. *2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n
+// e.g. *2\r\n$3\r\nfoo\r\n$3\r\nbar\r\nv -> ["FOO" "BAR"]
 func parseCommand(raw []byte) (*Command, error) {
 	// parse number of items
 	str, stop, err := nextString(raw, 1)

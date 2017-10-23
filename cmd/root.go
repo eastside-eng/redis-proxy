@@ -10,6 +10,8 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	. "github.com/eastside-eng/redis-proxy/log"
 )
 
 var redisAddr string
@@ -27,21 +29,29 @@ var cfgFile string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "redis-proxy",
-	Short: "A simple in-memory Redis proxy. Supports RESP.",
-	Long:  ``,
+	Short: "A simple in-memory Redis proxy that supports the RESP protocol.",
+	Long:  `Redis-proxy is a flexible server for `,
 	Run: func(cmd *cobra.Command, args []string) {
 		redisAddr = viper.GetString("redis_hostname")
 		redisPassword = viper.GetString("redis_password")
 		redisDb = viper.GetInt("redis_database")
+		cacheTTLMs = viper.GetInt("cache_ttl")
+		cachePeriodMs = viper.GetInt("cache_period")
+		cacheCapacity = viper.GetInt("capacity")
+		port = viper.GetInt("port")
 
-		fmt.Println("Starting redis-proxy v0.1 with " + redisAddr)
+		Logger.Infow("Starting redis-proxy v0.1",
+			"redis-hostname", redisAddr,
+			"ttl", cacheTTLMs,
+			"capacity", cacheCapacity,
+			"port", port)
+
 		client := redis.NewClient(&redis.Options{
 			Addr:     redisAddr,
 			Password: redisPassword,
 			DB:       redisDb,
 		})
-
-		fmt.Println("Pinging backing redis", client.Ping())
+		Logger.Infow("Pinging backing redis", "responnse", client.Ping())
 
 		cache, err := cache.NewDecayingLRUCache(cacheCapacity,
 			time.Duration(cachePeriodMs)*time.Millisecond,
@@ -72,15 +82,21 @@ func init() {
 	RootCmd.Flags().String("redis_password", "", "The password for the backing redis cache.")
 	RootCmd.Flags().Int("redis_database", 0, "The redis database to use. See https://redis.io/commands/select.")
 
-	RootCmd.Flags().IntVar(&cacheCapacity, "capacity", 1024, "The maximum number of entries to cache.")
-	RootCmd.Flags().IntVar(&cachePeriodMs, "cache-period", 100, "The periodicity of the cache eviction thread, in milliseconds.")
-	RootCmd.Flags().IntVar(&cacheTTLMs, "cache-ttl", 5*60*1000, "A global TTL for cache entries, in milliseconds.")
+	RootCmd.Flags().Int("capacity", 1024, "The maximum number of entries to cache.")
+	RootCmd.Flags().Int("cache-period", 100, "The periodicity of the cache eviction thread, in milliseconds.")
+	RootCmd.Flags().Int("cache-ttl", 5*60*1000, "A global TTL for cache entries, in milliseconds.")
 
-	RootCmd.Flags().IntVarP(&port, "port", "p", 8001, "A open port used for listening.")
+	RootCmd.Flags().Int("port", 8001, "A open port used for listening.")
 
 	viper.BindPFlag("redis_hostname", RootCmd.Flags().Lookup("redis_hostname"))
 	viper.BindPFlag("redis_password", RootCmd.Flags().Lookup("redis_password"))
 	viper.BindPFlag("redis_database", RootCmd.Flags().Lookup("redis_database"))
+
+	viper.BindPFlag("capacity", RootCmd.Flags().Lookup("capacity"))
+	viper.BindPFlag("cache_period", RootCmd.Flags().Lookup("cache_period"))
+	viper.BindPFlag("cache_ttl", RootCmd.Flags().Lookup("cache_ttl"))
+
+	viper.BindPFlag("port", RootCmd.Flags().Lookup("port"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -92,7 +108,6 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	fmt.Println("Loaded from Env", viper.AllKeys())
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())

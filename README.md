@@ -32,6 +32,9 @@ Very basic Redis CLI commands will work against redis-proxy. As of this time `PI
 # Design
 The redis-proxy is very basic, at the core it's a TCP server that handles the RESP (Redis Serialization Protocol). The current implementation only supports GET and PING. GET is backed by a LRU cache with a global TTL mechanism; on cache misses the GET request will be delegated to the backing Redis and populated by the response.
 
+The Server/Command/Handler handoff is supposed to encourage modularity when supporting multiple commands in some future context. I initially started with a callback mechanism but needed a way to inject logic into the pre-command-process step too. For simplicity I removed the callback, but
+having some kind of pre/post hooks would probably work well if this was to be used as a flexible redis proxy for arbitrary business logic.
+
 Assumptions:
 * Simple string keys and values. Future improvements can be made to the server to extend support for other types.
 * Only GET and PING commands supported. Supporting other commands requires more complex serialization of RESP types.

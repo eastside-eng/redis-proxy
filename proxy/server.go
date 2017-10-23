@@ -26,6 +26,8 @@ func NewServer(cache *cache.DecayingLRUCache, redisClient *redis.Client) *Server
 	return server
 }
 
+// Process accepts a new tcpConn and will listen for incoming bytes, parse them into
+// commands and then execute them.
 func (s *Server) process(tcpConn net.Conn) {
 	defer tcpConn.Close()
 
@@ -83,29 +85,36 @@ func (s *Server) Run(port int) {
 	}
 }
 
+// RespNIL is a constant representing the RESP Nil value
 var RespNIL = []byte("$-1\r\n")
 
+// RespEncodeString encodes a given string into RESP
 func RespEncodeString(str string) []byte {
 	res := fmt.Sprintf("$%d\r\n%s\r\n", len(str), str)
 	return []byte(res)
 }
 
+// RespEncodeInteger encodes a given integer into RESP
 func RespEncodeInteger(i int) []byte {
 	res := fmt.Sprintf(":%d\r\n", i)
 	return []byte(res)
 }
 
-// Handler ...
+// Handlers are executed per-command and should execute any side effects.
 type handler func(cache *cache.DecayingLRUCache, redisClient *redis.Client, command *Command) ([]byte, error)
 
 var getHandler handler = func(cache *cache.DecayingLRUCache, redisClient *redis.Client, command *Command) ([]byte, error) {
 	key := command.Args[0]
 	resp, exists := cache.Get(key)
-	Logger.Infow("Invoking GET on cache", "key", key, "cache-entry", resp)
+	Logger.Infow("Invoking GET on cache",
+		"key", key,
+		"cache-entry", resp)
 	if !exists {
 		resp := redisClient.Get(key)
 		val, err := resp.Result()
-		Logger.Infow("Invoking GET on backing Redis", "key", key, "redis-entry", val)
+		Logger.Infow("Invoking GET on backing Redis",
+			"key", key,
+			"redis-entry", val)
 		if err != nil {
 			return RespNIL, nil
 		}
