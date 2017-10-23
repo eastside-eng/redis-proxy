@@ -51,8 +51,9 @@ The cache simply ignores Redis connectivity issues currently. All requests will 
 backing redis becomes unreachable.
 
 Improvements:
-   [ ] Support Redis commands with multi-word names.
-   [ ] Handle malformed input.
-   [ ] Support more complex RESP types.
-   [ ] Add a Redis healthcheck.
-   [ ] Add instrumentation.
+
+* [ ] Support Redis commands with multi-word names.
+* [ ] Handle malformed input.
+* [ ] Support more complex RESP types.
+* [ ] Add a Redis healthcheck.
+* [ ] Add instrumentation.
