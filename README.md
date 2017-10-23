@@ -29,6 +29,7 @@ The redis-proxy is very basic, at the core it's a TCP server that handles the RE
 Assumptions:
 * Simple string keys and values. Future improvements can be made to the server to extend support for other types.
 * Only GET and PING commands supported. Supporting other commands requires more complex serialization of RESP types.
+* Assuming _well_ formed input. The parser is fragile as is.
 
 ## Cache
 Under the covers is a LRU cache with a TTL mechanism driven by a 'redeemer' coroutine. The LRU is implemented
@@ -50,7 +51,8 @@ The cache simply ignores Redis connectivity issues currently. All requests will 
 backing redis becomes unreachable.
 
 Improvements:
-[ ] Support Redis commands with multi-word names.
-[ ] Support more complex RESP types.
-[ ] Add a Redis healthcheck.
-[ ] Add instrumentation.
+   [ ] Support Redis commands with multi-word names.
+   [ ] Handle malformed input.
+   [ ] Support more complex RESP types.
+   [ ] Add a Redis healthcheck.
+   [ ] Add instrumentation.

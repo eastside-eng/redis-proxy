@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/eastside-eng/redis-proxy/cache"
@@ -28,28 +29,35 @@ func NewServer(cache *cache.DecayingLRUCache, redisClient *redis.Client) *Server
 func (s *Server) process(tcpConn net.Conn) {
 	defer tcpConn.Close()
 
-	// This is fixed to 1024, but we could make this bigger. RESP supposedly
-	// supports up to 512 MB BulkStrings.
-	bytes := make([]byte, 1024)
-	_, err := tcpConn.Read(bytes)
+	for {
+		// This is fixed to 1024, but we could make this bigger. RESP supposedly
+		// supports up to 512 MB BulkStrings.
+		bytes := make([]byte, 1024)
+		_, err := tcpConn.Read(bytes)
 
-	Logger.Infow("Processing connection", "bytes", len(bytes), "err", err)
+		Logger.Infow("Processing connection", "bytes", len(bytes), "err", err)
+		if err != nil {
+			Logger.Warnw("Received an error from connection", "err", err)
+			if err == io.EOF {
+				return
+			}
+		}
+		command, err := parseCommand(bytes)
+		if err != nil {
+			Logger.Warnw("Failed to parse command", "command", command)
+			continue
+		}
 
-	command, err := parseCommand(bytes)
-	if err != nil {
-		Logger.Warnw("Failed to parse command", "command", command)
-		return
+		resp, err := s.processCommand(command)
+		if err != nil {
+			Logger.Errorw("Failed to process command", "command", command, "err", err)
+			continue
+		}
+
+		writer := bufio.NewWriter(tcpConn)
+		writer.Write(resp)
+		writer.Flush()
 	}
-
-	resp, err := s.processCommand(command)
-	if err != nil {
-		Logger.Errorw("Failed to process command", "command", command, "err", err)
-		return
-	}
-
-	writer := bufio.NewWriter(tcpConn)
-	writer.Write(resp)
-	writer.Flush()
 }
 
 // Run spawns a TCP server on the port given and begins accepting incoming

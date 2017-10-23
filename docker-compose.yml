@@ -7,6 +7,8 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - redis_hostname="redis:6379"
+      - REDIS_HOSTNAME="redis:6379"
   redis:
     image: redis:latest
+    ports:
+      - "6379:6379"

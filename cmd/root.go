@@ -34,7 +34,7 @@ var RootCmd = &cobra.Command{
 		redisPassword = viper.GetString("redis_password")
 		redisDb = viper.GetInt("redis_database")
 
-		fmt.Println("Starting redis-proxy with " + redisAddr)
+		fmt.Println("Starting redis-proxy v0.1 with " + redisAddr)
 		client := redis.NewClient(&redis.Options{
 			Addr:     redisAddr,
 			Password: redisPassword,
