@@ -18,6 +18,5 @@ func NewLogger() *zap.SugaredLogger {
 	if err != nil {
 		panic("Failed creating a logger, something is very wrong!")
 	}
-	logger := l.Sugar()
-	return logger
+	return l.Sugar()
 }

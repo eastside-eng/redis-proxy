@@ -1,4 +1,4 @@
-package dlru
+package cache
 
 import (
 	"container/list"
@@ -6,6 +6,9 @@ import (
 	"sync"
 	"time"
 )
+
+type Cache interface {
+}
 
 // cacheElement is a container type used by DecayingLRUCache.
 type cacheElement struct {
@@ -24,6 +27,8 @@ type cacheElement struct {
 // a valid TTL. The periodicity of the eviction routine is parameterized and
 // given to the constructor.
 type DecayingLRUCache struct {
+	Cache
+
 	elements *list.List
 	log      *list.List
 	hashmap  map[string]*list.Element
@@ -47,16 +52,16 @@ func NewDecayingLRUCache(capacity int, period time.Duration, ttl time.Duration) 
 	}
 
 	cache := &DecayingLRUCache{
-		list.New(),
-		list.New(),
-		make(map[string]*list.Element),
-		capacity,
-		sync.Mutex{},
+		elements: list.New(),
+		log:      list.New(),
+		hashmap:  make(map[string]*list.Element),
+		capacity: capacity,
+		lock:     sync.Mutex{},
 
 		// For the redeemer
-		time.NewTicker(period),
-		make(chan bool),
-		ttl,
+		ticker:     time.NewTicker(period),
+		stopTicker: make(chan bool),
+		ttl:        ttl,
 	}
 	return cache, nil
 }
@@ -66,6 +71,7 @@ func NewDecayingLRUCache(capacity int, period time.Duration, ttl time.Duration) 
 func (cache *DecayingLRUCache) Get(key string) (interface{}, bool) {
 	ref, exists := cache.hashmap[key]
 	if exists {
+		cache.elements.MoveToFront(ref)
 		return ref.Value.(*cacheElement).Val, exists
 	}
 	return nil, exists
@@ -169,8 +175,9 @@ func (cache *DecayingLRUCache) redeemer() {
 				}
 
 				// Move cursor and remove last element.
+				prev := cursor
 				cursor = cursor.Next()
-				cache.log.Remove(cursor.Prev())
+				cache.log.Remove(prev)
 			}
 		case <-cache.stopTicker:
 			cache.ticker.Stop()
