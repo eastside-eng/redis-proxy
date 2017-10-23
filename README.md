@@ -22,8 +22,7 @@ Flags:
       --redis_password string   The password for the backing redis cache.
 ```
 
-redis-proxy uses the Viper and Cobra libraries to provide configuration and CLI support. Environment variables and config files are supported,
-see the Cobra documentation.
+redis-proxy uses the Viper and Cobra libraries to provide configuration and CLI support. Environment variables and config files are supported, see the Cobra documentation.
 
 ### Docker
 
@@ -50,6 +49,10 @@ Very basic Redis CLI commands will work against redis-proxy. As of this time `PI
 127.0.0.1:8001> get x
 "true" # x existed in the persisted Redis
 ```
+
+### End To End Testing
+
+End to end tests are available in the main pkg and can be run via `make test` or `go test github.com/eastside-eng/redis-proxy`. Running the end to end tests requires setting up both redis and redis-proxy. A docker-compose file is provided for this setup- running `make test` will use Docker to bring everything up for you.
 
 # Design
 The redis-proxy is very basic, at the core it's a TCP server that handles the RESP (Redis Serialization Protocol). The current implementation only supports GET and PING. GET is backed by a LRU cache with a global TTL mechanism; on cache misses the GET request will be delegated to the backing Redis and populated by the response.
